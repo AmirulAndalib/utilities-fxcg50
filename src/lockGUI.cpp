@@ -119,7 +119,9 @@ int setPassword() {
       return 0;
     Bdisp_AllClr_VRAM();
     drawScreenTitle("Calculator lock", "Confirm password:");
+    unsigned char password0 = password[0];
     if (passwordInput(1, 3, confirmation)) {
+      password[0] = password0;
       if(!strcmp((char*)password, (char*)confirmation)) {
         savePassword(password);
         return 1;
