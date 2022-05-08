@@ -94,7 +94,7 @@ void setmGetKeyMode(int mode) {
   mGetKeyMode = mode;
 }
 
-/* CODE BY SIMON LOTHAR, AVAILABLE ON "fx_calculators_SuperH_based.chm" version 16 */
+/* CODE BY SIMON LOTHAR, AVAILABLE ON https://prizm.cemetech.net/index.php?title=SetGetkeyToMainFunctionReturnFlag */
 
 // the function assumes, that the RAM-pointer to GetkeyToMainFunctionReturnFlag is loaded 
 // immediately by a "Move Immediate Data"-instruction
@@ -137,7 +137,7 @@ unsigned int SetGetkeyToMainFunctionReturnFlag(unsigned int enabled) {
       if (addr2 >= (int)0x81000000) return 0x108;
 
       addr = *(unsigned int*)addr2;
-      if ((addr & 0xFF000000) != 0x88000000) return 0x109;
+      if ((addr & 0xFF000000) != 0x88000000 && (addr & 0xFF000000) != 0x8C000000) return 0x109; // Changed to work on fx-CG 50 as well as 10/20.
 
       // finally perform the desired operation and set the flag:
       if (enabled) *(unsigned char*)addr = 0;
