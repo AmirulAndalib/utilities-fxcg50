@@ -1,4 +1,4 @@
-# Utilities add-in for the Casio Prizm (fx-CG 10 and 20)
+# Utilities add-in for the Casio Prizm (fx-CG 50)
 
 The Utilities add-in enhances your Casio Prizm calculator by providing functionality not originally found in the OS, or by providing enhanced alternatives to existing functionality.
 

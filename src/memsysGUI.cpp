@@ -314,6 +314,8 @@ void systemInfo() {
     elem[9].text = (char*)"fx-CG 10";
   } else if(getHardwareModel() == 2) {
     elem[9].text = (char*)"fx-CG 20";
+  } else if(getHardwareModel() == 3) {
+    elem[9].text = (char*)"fx-CG 50";
   } else {
     elem[9].text = (char*)"Unknown";
   }
