@@ -17,6 +17,7 @@
 #include "graphicsProvider.hpp"
 #include "settingsProvider.hpp"
 #include "stringsProvider.hpp"
+#include "hardwareProvider.hpp"
 
 typedef scrollbar TScrollbar;
 
@@ -108,6 +109,8 @@ int doMenu(Menu* menu, MenuItemIcon* icontable) {
             icontable != NULL
           ) {
             if (menu->items[curitem].isfolder == 1) {
+              unsigned short mask = getHardwareModel() == 3 ? 0xFBE0 : 0xf81f;
+
               // assumes first icon in icontable is the folder icon
               CopySpriteMasked(icontable[0].data, (menu->startX)*18,
                                (curitem+itemsStartY-menu->scroll)*24, 0x12, 0x18, 0xf81f);
