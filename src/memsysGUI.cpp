@@ -205,6 +205,10 @@ void changeFKeyColor() {
     }
   }
 
+  if(getHardwareModel() == 3){
+    keycolor = (unsigned char*) 0xFD8017CC;
+  }
+
   Bdisp_AllClr_VRAM();
   DisplayStatusArea();
   drawScreenTitle("Function Key Color");
