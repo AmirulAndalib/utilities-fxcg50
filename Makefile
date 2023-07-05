@@ -28,8 +28,13 @@ INCLUDES	:=
 #---------------------------------------------------------------------------------
 # git version controlling mechanism
 #---------------------------------------------------------------------------------
-$(shell touch $(CURDIR)/src/versionProvider.cpp) #force version and timestamp defines to update.
+ifeq ($(OS),Windows_NT) #force version and timestamp defines to update.
+$(shell cmd /C 'type nul >> $(CURDIR)/src/versionProvider.cpp') 
+GIT_VERSION = $(shell cmd /C 'git describe --abbrev=4 --dirty --always')
+else
+$(shell touch $(CURDIR)/src/versionProvider.cpp)
 GIT_VERSION = $(shell sh -c 'git describe --abbrev=4 --dirty --always')
+endif
 GIT_TIMESTAMP += "$(shell git log --pretty=format:'%aD' -1)"
 
 #---------------------------------------------------------------------------------
@@ -42,11 +47,11 @@ MKG3AFLAGS := -n basic:Utilities -i uns:../unselected.bmp -i sel:../selected.bmp
 # (LTO). Doing so will usually allow the compiler to generate much better code
 # (smaller and/or faster), but may expose bugs in your code that don't cause
 # any trouble without LTO enabled.
-CFLAGS	= -Os -Wall $(MACHDEP) $(INCLUDE) -ffunction-sections -fdata-sections -flto \
+CFLAGS	= -Os -Wall $(MACHDEP) $(INCLUDE) -ffunction-sections -fdata-sections \
 		  -D__GIT_VERSION=\"$(GIT_VERSION)\" -D__GIT_TIMESTAMP=\"$(GIT_TIMESTAMP)\"
 CXXFLAGS	=	$(CFLAGS) -fno-exceptions
 
-LDFLAGS	= $(MACHDEP) -T$(FXCGSDK)/toolchain/prizm.x -Wl,-static -Wl,-gc-sections -flto
+LDFLAGS	= $(MACHDEP) -T$(FXCGSDK)/toolchain/prizm.x -Wl,-static -Wl,-gc-sections
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
