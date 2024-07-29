@@ -1,0 +1,79 @@
+name: Build Utilities for Casio Prizm FX CG50
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number for the release'
+        required: false
+        default: 'v$(date +%Y%m%d%H%M%S)'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential git
+        git clone https://github.com/Jonimoose/libfxcg.git
+        export FXCGSDK=$(pwd)/libfxcg
+        export PATH=$FXCGSDK/toolchain/bin:$PATH
+
+    - name: Build .g3a utilities
+      run: |
+        export FXCGSDK=$(pwd)/libfxcg
+        cd ${{ github.workspace }}
+        make
+
+    - name: Upload .g3a file
+      uses: actions/upload-artifact@v2
+      with:
+        name: Utilities
+        path: |
+          ${{ github.workspace }}/Utilities.g3a
+
+    - name: Create Tag
+      id: create_tag
+      run: |
+        if [ "${{ github.event.inputs.version }}" ]; then
+          new_version="${{ github.event.inputs.version }}"
+        else
+          new_version="v$(date +%Y%m%d%H%M%S)"
+        fi
+        echo "new_version=${new_version}" >> $GITHUB_ENV
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag "${new_version}"
+        git push origin "${new_version}"
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.new_version }}
+        release_name: Release ${{ env.new_version }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ github.workspace }}/Utilities.g3a
+        asset_name: Utilities.g3a
+        asset_content_type: application/octet-stream
