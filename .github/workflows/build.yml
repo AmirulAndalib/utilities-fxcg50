@@ -22,26 +22,24 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Required Packages
-      run: sudo apt-get install -y build-essential wget bison flex texinfo gperf libgmp3-dev libmpc-dev libmpfr-dev
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-    - name: Download and Extract libfxcg
-      run: |
-        wget https://github.com/dr-carlos/libfxcg/archive/refs/heads/master.zip
-        unzip master.zip
-        mv libfxcg-master libfxcg
-        cd libfxcg
-        make -f Makefile.toolchain
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
 
-    - name: Set up environment variables
+    - name: Build Docker image
       run: |
-        export FXCGSDK=$(pwd)/libfxcg
-        export PATH=$FXCGSDK/bin:$PATH
+        docker build -t libfxcg-toolchain -f libfxcg/Dockerfile.toolchain .
 
     - name: Build .g3a utilities
       run: |
-        cd ${{ github.workspace }}
-        make
+        docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace libfxcg-toolchain make
 
     - name: Upload .g3a file
       uses: actions/upload-artifact@v2
