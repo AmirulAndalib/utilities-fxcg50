@@ -22,17 +22,24 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up toolchain
+    - name: Install Required Packages
+      run: sudo apt-get install -y build-essential wget bison flex texinfo gperf libgmp3-dev libmpc-dev libmpfr-dev
+
+    - name: Download and Extract libfxcg
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential git
-        git clone https://github.com/Jonimoose/libfxcg.git
+        wget https://github.com/dr-carlos/libfxcg/archive/refs/heads/master.zip
+        unzip master.zip
+        mv libfxcg-master libfxcg
+        cd libfxcg
+        make -f Makefile.toolchain
+
+    - name: Set up environment variables
+      run: |
         export FXCGSDK=$(pwd)/libfxcg
-        export PATH=$FXCGSDK/toolchain/bin:$PATH
+        export PATH=$FXCGSDK/bin:$PATH
 
     - name: Build .g3a utilities
       run: |
-        export FXCGSDK=$(pwd)/libfxcg
         cd ${{ github.workspace }}
         make
 
