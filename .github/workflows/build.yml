@@ -1,4 +1,4 @@
-name: Build Casio FX-CG50 Utilities
+name: Build Utilities for Casio Prizm FX CG50
 
 on:
   push:
@@ -19,47 +19,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout utilities repository
-      uses: actions/checkout@v2
-      with:
-        path: utilities-fxcg50
+    - name: Checkout main repository
+      uses: actions/checkout@v3
 
-    - name: Checkout libfxcg repository
+    - name: Clone libfxcg repository
       run: |
         git clone https://github.com/dr-carlos/libfxcg.git
         cd libfxcg
-        # Set up the toolchain environment
-        export FXCGSDK=$(pwd)/toolchain
-        # Install dependencies and build the toolchain
-        curl -L http://ftpmirror.gnu.org/binutils/binutils-2.34.tar.bz2 | tar xj
-        mkdir build-binutils
-        cd build-binutils
-        ../binutils-2.34/configure --target=sh3eb-elf --disable-nls --with-sysroot
-        make -j$(nproc)
-        sudo make install
+        git checkout master
 
-        cd ..
-        curl -L http://ftpmirror.gnu.org/gcc/gcc-10.1.0/gcc-10.1.0.tar.xz | tar xJ
-        mkdir build-gcc
-        cd build-gcc
-        ../gcc-10.1.0/configure --target=sh3eb-elf --with-pkgversion=PrizmSDK --without-headers --enable-languages=c,c++ --disable-tls --disable-nls --disable-threads --disable-shared --disable-libssp --disable-libvtv --disable-libada --with-endian=big --with-multilib-list=
-        make -j$(nproc) inhibit_libc=true all-gcc
-        sudo make install-gcc
-        make -j$(nproc) inhibit_libc=true all-target-libgcc
-        sudo make install-target-libgcc
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    - name: Build utilities
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Build Docker image
       run: |
-        cd utilities-fxcg50
-        export FXCGSDK=$(pwd)/../libfxcg/toolchain
-        make
+        docker build -t libfxcg-toolchain -f libfxcg/Dockerfile.toolchain .
 
-    - name: Upload utilities
-      uses: actions/upload-artifact@v2
+    - name: List directory contents before build
+      run: |
+        ls -R
+
+    - name: Build .g3a utilities
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace libfxcg-toolchain make -C libfxcg
+
+    - name: Upload .g3a file
+      uses: actions/upload-artifact@v3
       with:
         name: Utilities
         path: |
-          utilities-fxcg50/Utilities.g3a
+          ${{ github.workspace }}/Utilities.g3a
 
     - name: Create Tag
       id: create_tag
@@ -92,6 +89,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: utilities-fxcg50/Utilities.g3a
+        asset_path: ${{ github.workspace }}/Utilities.g3a
         asset_name: Utilities.g3a
         asset_content_type: application/octet-stream
